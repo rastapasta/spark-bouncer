@@ -37,9 +37,9 @@ $ spark call [core-id] open
 ### Configure RFID access
 The **spark-bouncer** stores up to 3000 users, each being identified by their 4 to 10 bytes long [RFID serial numbers](https://en.wikipedia.org/wiki/Radio-frequency_identification#Tags).
 
-You have to define whom to let in at which time. To do so, call the published **update** function.
+#### Store RFID key
+You have to define whom to let in at which time. To do so, call the published **update** function with following argument:
 
-#### Update format
 	[key serial];[time restrictions];[flags]
 
 Format used in the fields:
@@ -69,13 +69,11 @@ $ spark call [core-id] update "aa:bb:cc:dd;*;active,otp"
 
 Each hour of a week day is mapped to a bit in a 4 byte long. Setting a bit to 1 grants access for the corresponding hour.
 
-Example:
+Examples:
 
-For the time between 16h and 17h, the 16th bit must be set (0x10000).
-
-For full day access, set all bits to high (0xFFFFFFFF).
-
-Grant access for all of Monday and Sunday, otherwise only buzz in between 16h-24h on Tuesdays:
+* For the time between 16h and 17h, the 16th bit must be set (0x10000).
+* For full day access, set all bits to high (0xFFFFFFFF).
+* Grant access for all of Monday and Sunday, otherwise only buzz in between 16h-24h on Tuesdays:
 
 ```sh
 $ spark call [core-id] update "aa:bb:cc:dd;FFFFFFFF 1000F 0 0 0 0 FFFFFFFF;active,otp"
