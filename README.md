@@ -35,9 +35,9 @@ $ spark call [core-id] open
 ```
 
 ### Configure RFID key
-The **spark-bouncer** remembers up to 3000 faces, each being identified by their up to 10 bytes long [RFID serial numbers](https://en.wikipedia.org/wiki/Radio-frequency_identification#Tags).
+The **spark-bouncer** remembers up to 3000 users, each being identified by their 4 to 10 bytes long [RFID serial numbers](https://en.wikipedia.org/wiki/Radio-frequency_identification#Tags).
 
-You have to tell him whom to let in when and whom not. To do so, call the published **update** function.
+You have to tell him whom to let in at which time. To do so, call the published **update** function.
 #### Update format
 	[key serial];[time restrictions];[flags]
 
@@ -45,8 +45,8 @@ Format used in the fields:
 
 * **key serial** -  aa:bb:cc[:...] - up to 10 hex values seperated by colons
 * **time restrictions**
-  * ** * ** -> open at all times
-  * ** - ** -> never open
+  * * -> open at all times
+  * **-** -> never open
   * up to seven **4 byte hex values** to define specific valid hours per weekday
 * **flags** - comma seperated list, set to false if flag not present
   * **otp** -> enable One Time Passwords for this key [**recommended**]
@@ -54,10 +54,10 @@ Format used in the fields:
   * **lost** -> marks key as lost - won't get you in anymore
   * **reset** -> resets the stored OTP in case something went wrong
 
-The returned integer is
+The call returns
 
 * **1** if all went well
-* **-1** if key couldn't get updated
+* **-1** if the key couldn't get stored
 
 Examples:
 
@@ -105,9 +105,9 @@ $ spark get [core-id] log
 ```
 
 ### Debugging
-To control the Spark Core's debug output, call the *debug* function with either
+To control the Spark Core's debug output, call the **debug** function with either
 
-* **1** -> to **enable** serial debug output
+* **1** -> to **enable** serial debug output, or
 * **0** -> to **disable** serial debug output
 
 Example:
