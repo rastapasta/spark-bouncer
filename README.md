@@ -27,6 +27,8 @@ Buzzing yourself in is just an API call away.
 ## Get started
 Breadboard the parts together as described in the [header](https://github.com/rastapasta/spark-bouncer/blob/master/application.cpp) and boot it up!
 
+The code is currently optimized to locally compile outside of the cloud. If you just like to test it without a local environment, flash the included firmware.bin to skip the setup.
+
 If it is the first time you are running the **spark-bouncer**, your flash memory needs to get initialized:
 ```sh
 $ spark call [core-id] reset
