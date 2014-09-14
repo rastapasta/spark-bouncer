@@ -34,10 +34,11 @@ Example:
 $ spark call [core-id] open
 ```
 
-### Configure RFID key
-The **spark-bouncer** remembers up to 3000 users, each being identified by their 4 to 10 bytes long [RFID serial numbers](https://en.wikipedia.org/wiki/Radio-frequency_identification#Tags).
+### Configure RFID access
+The **spark-bouncer** stores up to 3000 users, each being identified by their 4 to 10 bytes long [RFID serial numbers](https://en.wikipedia.org/wiki/Radio-frequency_identification#Tags).
 
-You have to tell him whom to let in at which time. To do so, call the published **update** function.
+You have to define whom to let in at which time. To do so, call the published **update** function.
+
 #### Update format
 	[key serial];[time restrictions];[flags]
 
@@ -64,8 +65,6 @@ Examples:
 ```sh
 $ spark call [core-id] update aa:bb:cc:dd;*;active,otp
 ```
-
-#### Time restrictions
 
 ### Logging
 #### Data format
@@ -105,7 +104,7 @@ $ spark get [core-id] log
 ```
 
 ### Debugging
-To control the Spark Core's debug output, call the **debug** function with either
+To control the Spark Core's debug output, call the published **debug** function with either
 
 * **1** -> to **enable** serial debug output, or
 * **0** -> to **disable** serial debug output
@@ -114,4 +113,47 @@ Example:
 
 ```sh
 $ spark call [core-id] debug 1
+1
+$ spark serial monitor
+Opening serial monitor for com port: "/dev/cu.usbmodemfa131"
+[rfid] identifying f3:65:1d:bc
+[flash] Key found, index #0
+-- Active? yes
+-- Lost? no
+-- Times:
+          Monday   Tuesday  Wednesday  Thursday   Friday   Saturday   Sunday
+ 0 h                                      *                               
+ 1 h                                      *                               
+ 2 h                                      *                               
+ 3 h                                      *                               
+ 4 h                                      *                               
+ 5 h                                                                      
+ 6 h                                                                      
+ 7 h                                                                      
+ 8 h                                                                      
+ 9 h        *         *                                                   
+10 h        *         *                                                   
+11 h        *         *                                       *         * 
+12 h        *         *                                       *         * 
+13 h        *         *                                       *         * 
+14 h        *         *                                       *         * 
+15 h        *         *                                       *         * 
+16 h        *         *                                       *         * 
+17 h        *         *                                      (*)        * 
+18 h        *         *                                       *         * 
+19 h        *         *                                       *         * 
+20 h        *         *         *                                         
+21 h                            *                                         
+22 h                            *                                         
+23 h                            *                                         
+
+-- last update of user configuration: Sat Sep 13 21:32:47 2014
+-- last seen: Sat Sep 13 21:44:06 2014
+
+-- OTP:      64 39 2C BC 4A F6 62 04 B1 FF 49 D0 58 2B F4 E3
+OTP on Chip: 64 39 2C BC 4A F6 62 04 B1 FF 49 D0 58 2B F4 E3
+New OTP:     DA 29 14 1D 37 12 7D 56 04 84 24 A6 49 E0 CA 67
+[card] hours match, opening!
+[door] opening
+[door] closing
 ```
