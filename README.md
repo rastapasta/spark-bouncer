@@ -103,7 +103,7 @@ Examples:
 
 * For the time between 16h and 17h, the 16th bit must be set (0x10000).
 * For full day access, set all bits to high (0xFFFFFFFF).
-* Grant access for all of Monday and Sunday, otherwise only buzz in between 16h-24h on Tuesdays:
+* Grant access for all of Monday and Sunday, otherwise only buzz in between 16h-17h and 0h-4h on Tuesdays:
 
 ```sh
 $ spark call [core-id] update "aa:bb:cc:dd;FFFFFFFF 1000F 0 0 0 0 FFFFFFFF;active,otp"
