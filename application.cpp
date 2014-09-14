@@ -67,7 +67,7 @@ using namespace Flashee;
 #define FLASH_DATA_BEGIN    4096*40
 
 #define FLASH_KEYS_MAX      ((FLASH_LOG_BEGIN-FLASH_KEYS_BEGIN)/KEY_SIZE)
-#define FLASH_LOG_MAX		((FLASH_DATA_BEGIN-FLASH_LOG_BEGIN)/sizeof(log_t))
+#define FLASH_LOG_MAX       ((FLASH_DATA_BEGIN-FLASH_LOG_BEGIN)/sizeof(log_t))
 #define KEY_NOT_FOUND       -1
 
 #define DEBUG_PRINT(x)      if(debugMode)Serial.print(x)
@@ -395,15 +395,6 @@ void checkButton() {
 	}
 }
 
-/*************** Debug helpers ***************/
-void printlnHex16(byte (&data)[16]) {
-	for (byte i=0; i<16; i++) {
-		Serial.print(data[i] < 0x10 ? " 0" : " ");
-		Serial.print(data[i], HEX);
-	}
-	Serial.println();
-}
-
 /*************** RFID handling and helpers ***************/
 void checkRFID() {
     if (openUntil || millis() < nextRFID)
@@ -642,6 +633,15 @@ void checkTime() {
 
     Spark.syncTime();
     lastSync = millis();
+}
+
+// Make a beautiful dump.
+void printlnHex16(byte (&data)[16]) {
+	for (byte i=0; i<16; i++) {
+		Serial.print(data[i] < 0x10 ? " 0" : " ");
+		Serial.print(data[i], HEX);
+	}
+	Serial.println();
 }
 
 // Flash 'em
