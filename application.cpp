@@ -30,6 +30,9 @@
  *    D1  +  3.3V
  * ************************************************************
  */
+
+// Optimized for local compilation - https://github.com/spark/core-firmware#1-download-and-install-dependencies
+// Might need minimal adaptions to compile in the cloud.
 #include "MFRC522.h"
 #include "flashee-eeprom.h"
 using namespace Flashee;
@@ -145,6 +148,7 @@ unsigned long lastSync = millis();
 unsigned long nextRFID = 0;
 
 char logBuffer[622];
+char serialBuffer[622];
 bool debugMode = true;
 
 config_t config;
@@ -285,32 +289,6 @@ int cloudReset(String foo) {
 	return 1;
 }
 
-String keyToString(byte (&key)[KEY_SIZE]) {
-	String str;
-	bool stop;
-	for (byte i = 0; i < KEY_SIZE; i++) {
-		// Look ahead to see if only empty fields are following
-		// -> if so, shorten the stringified key to its minimum
-		stop = true;
-		for (byte j=i; j < KEY_SIZE; j++) {
-			if (key[i]) {
-				stop = false;
-				break;
-			}
-		}
-		if (stop)
-			break;
-
-		if (i>0)
-			str += ":";
-		if (key[i] < 0xF)
-			str += "0";
-
-		str += String(key[i], HEX);
-	}
-	return str;
-}
-
 // Communicate that a card scan got handled - published format:
 //   timestamp:xx:xx:xx...:EVENT_CODE (-> see header)
 void cloudEvent(byte (&key)[KEY_SIZE], int eventCode) {
@@ -324,6 +302,7 @@ void cloudEvent(byte (&key)[KEY_SIZE], int eventCode) {
 	Spark.publish(F("card"), event, 60, PRIVATE);
 }
 
+/*************** Flash logging and cloud buffer handling ***************/
 // Stores the event döner style
 void logEvent(byte (&key)[KEY_SIZE], byte eventCode) {
 	int position = config.logEntries++ % FLASH_LOG_MAX;
@@ -410,61 +389,17 @@ void checkRFID() {
 	mfrc522.PCD_StopCrypto1();
 }
 
-// Setup the SPI + RFID module
-void rfidSetup() {
-	SPI.begin();
-	SPI.setClockDivider(SPI_CLOCK_DIV8);
-	mfrc522.PCD_Init();
-}
-
-// Authenticate a block access
-bool rfidAuth(int block) {
-	MFRC522::MIFARE_Key key;
-	
-	// All Mifare chips have their factory default keys set to HIGH
-	memset(&key, 0xFF, sizeof(key));
-
-	byte status = mfrc522.PCD_Authenticate(MFRC522::PICC_CMD_MF_AUTH_KEY_A, block, &key, &(mfrc522.uid));
-	if (status != MFRC522::STATUS_OK) {
-		DEBUG_PRINTLN(F("[rfid] auth failed"));
-		return false;
-	}
-
-	// All good!
-	return true;
-}
-
-bool rfidRead(byte (&target)[16], int block) {
-	byte buffer[18];
-	byte byteCount = sizeof(buffer);
-	int status = mfrc522.MIFARE_Read(RFID_BLOCK, buffer, &byteCount);
-	if (status != MFRC522::STATUS_OK) {
-		DEBUG_PRINTLN(F("[rfid] read failed"));
-		return false;
-	}
-
-	// <numnumnum>
-	memcpy(target, buffer, 16);
-	return true;
-}
-
-bool rfidWrite(int block, byte (&data)[16]) {
-	if (mfrc522.MIFARE_Write(block, data, 16) != MFRC522::STATUS_OK) {
-		DEBUG_PRINTLN(F("[rfid] write failed"));
-        return false;
-	}
-	return true;
-}
-
-/*************** RFID authentication handling ***************/
 void rfidIdentify() {
 	byte uid[KEY_SIZE];
+
+	// pad the scanned uid to KEY_SIZE
 	memset(uid, 0, KEY_SIZE);
 	memcpy(uid, mfrc522.uid.uidByte, mfrc522.uid.size);
 
 	DEBUG_PRINT(F("[rfid] identifying "));
 	DEBUG_PRINTLN(keyToString(uid));
 
+	// check if we know this key
 	long keyId = findKey(uid);
 	if (keyId == KEY_NOT_FOUND) {
 		cloudEvent(uid, EVENT_NOT_FOUND);
@@ -536,6 +471,53 @@ void rfidIdentify() {
 	saveUser(user, keyId);		
 }
 
+// Setup the SPI + RFID module
+void rfidSetup() {
+	SPI.begin();
+	SPI.setClockDivider(SPI_CLOCK_DIV8);
+	mfrc522.PCD_Init();
+}
+
+// Authenticate a block access
+bool rfidAuth(int block) {
+	MFRC522::MIFARE_Key key;
+	
+	// All Mifare chips have their factory default keys set to HIGH
+	memset(&key, 0xFF, sizeof(key));
+
+	byte status = mfrc522.PCD_Authenticate(MFRC522::PICC_CMD_MF_AUTH_KEY_A, block, &key, &(mfrc522.uid));
+	if (status != MFRC522::STATUS_OK) {
+		DEBUG_PRINTLN(F("[rfid] auth failed"));
+		return false;
+	}
+
+	// All good!
+	return true;
+}
+
+bool rfidRead(byte (&target)[16], int block) {
+	byte buffer[18];
+	byte byteCount = sizeof(buffer);
+	int status = mfrc522.MIFARE_Read(RFID_BLOCK, buffer, &byteCount);
+	if (status != MFRC522::STATUS_OK) {
+		DEBUG_PRINTLN(F("[rfid] read failed"));
+		return false;
+	}
+
+	// <numnumnum>
+	memcpy(target, buffer, 16);
+	return true;
+}
+
+bool rfidWrite(int block, byte (&data)[16]) {
+	if (mfrc522.MIFARE_Write(block, data, 16) != MFRC522::STATUS_OK) {
+		DEBUG_PRINTLN(F("[rfid] write failed"));
+        return false;
+	}
+	return true;
+}
+
+/*************** Access control ***************/
 // Handle a recognized users access - abracadabra, may it open!
 int checkAccess(user_t &user) {
 	int event;
@@ -565,16 +547,6 @@ int checkAccess(user_t &user) {
 }
 
 /*************** Key indexing handlers ***************/
-// Add a new RFID key into the key storage and increment the storage counter
-// Returns the new key's position
-uint16_t addKey(byte (&key)[KEY_SIZE]) {
-	uint16_t keyId = config.storedKeys++;
-	saveConfig();
-	
-	flash->write(&key, FLASH_KEYS_BEGIN+keyId*KEY_SIZE, KEY_SIZE);
-	return keyId;
-}
-
 // Allocate a given key ID in our storage and return its position (or KEY_NOT_FOUND)
 long findKey(byte (&key)[KEY_SIZE]) {
 	bool found = false;
@@ -601,6 +573,17 @@ long findKey(byte (&key)[KEY_SIZE]) {
 
 	return keyId;
 }
+
+// Add a new RFID key into the key storage and increment the storage counter
+// Returns the new key's position
+uint16_t addKey(byte (&key)[KEY_SIZE]) {
+	uint16_t keyId = config.storedKeys++;
+	saveConfig();
+	
+	flash->write(&key, FLASH_KEYS_BEGIN+keyId*KEY_SIZE, KEY_SIZE);
+	return keyId;
+}
+
 
 /*************** Flash readers/writers ***************/
 // Write a user struct into the designated data storage area
@@ -642,6 +625,33 @@ void printlnHex16(byte (&data)[16]) {
 		Serial.print(data[i], HEX);
 	}
 	Serial.println();
+}
+
+// Create a smart version of a RFID key
+String keyToString(byte (&key)[KEY_SIZE]) {
+	String str;
+	bool stop;
+	for (byte i = 0; i < KEY_SIZE; i++) {
+		// Look ahead to see if only empty fields are following
+		// -> if so, shorten the stringified key to its minimum
+		stop = true;
+		for (byte j=i; j < KEY_SIZE; j++) {
+			if (key[i]) {
+				stop = false;
+				break;
+			}
+		}
+		if (stop)
+			break;
+
+		if (i>0)
+			str += ":";
+		if (key[i] < 0xF)
+			str += "0";
+
+		str += String(key[i], HEX);
+	}
+	return str;
 }
 
 // Flash 'em
