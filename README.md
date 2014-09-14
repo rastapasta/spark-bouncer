@@ -24,6 +24,29 @@ Buzzing yourself in is just an API call away.
 * Relay [via [EXP Tech](http://www.exp-tech.de/Shields/Seeed-Studio-Grove-Relay.html)]
 * Door with an [electric strike](https://en.wikipedia.org/wiki/Electric_strike) [via [eBay](http://www.ebay.com/sch/i.html?_nkw=electronic+door+strike&_sop=15)]
 
+## Get started
+Breadboard the parts together as described in the [header](https://github.com/rastapasta/spark-bouncer/blob/master/application.cpp) and boot it up!
+
+Hold a comptabile RFID key to the reader, nothing will happen - yet!
+Query the log and store your key's serial number:
+
+```sh
+$ spark get [core-id] log
+123456;aa:bb:cc:dd;0
+$ spark call [core-id] update aa:bb:cc:dd;*;active,otp
+1
+```
+Try your RFID key again - the relay should make a happy noise.
+
+Let's see what has happened:
+```sh
+$ spark get [core-id] log
+123490;aa:bb:cc:dd;1
+123480;aa:bb:cc:dd;9
+123456;aa:bb:cc:dd;0
+```
+After the key wasn't found in the first place (NOT_FOUND), we updated it (UPDATED) - and granted access at the end (OPEN)!
+
 ## Usage
 ### Bouncer, let me in!
 By calling the published **open** function, you'll get an instant buzz.
@@ -183,3 +206,11 @@ New OTP:     DA 29 14 1D 37 12 7D 56 04 84 24 A6 49 E0 CA 67
 [door] opening
 [door] closing
 ```
+
+#### Reset storage
+
+Be careful, but if you need to reset your storage during development, call the published **reset** function. Your **spark-bouncer** will forget all he knew.
+
+**Recommended** to disable in production environments.
+
+
