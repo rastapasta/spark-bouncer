@@ -60,10 +60,25 @@ The call returns
 * **1** if all went well
 * **-1** if the key couldn't get stored
 
-Examples:
+Example:
 
 ```sh
-$ spark call [core-id] update aa:bb:cc:dd;*;active,otp
+$ spark call [core-id] update "aa:bb:cc:dd;*;active,otp"
+```
+#### Time based access
+
+Each hour of a week day is mapped to a bit in a 4 byte long. Setting a bit to 1 grants access for the corresponding hour.
+
+Example:
+
+For the time between 16h and 17h, the 16th bit must be set (0x10000).
+
+For full day access, set all bits to high (0xFFFFFFFF).
+
+Grant access for all of Monday and Sunday, otherwise only buzz in between 16h-24h on Tuesdays:
+
+```sh
+$ spark call [core-id] update "aa:bb:cc:dd;FFFFFFFF 1000F 0 0 0 0 FFFFFFFF;active,otp"
 ```
 
 ### Logging
@@ -83,7 +98,7 @@ Code | Event | Triggered when?
 4 | LOST | key is flagged as lost
 5 | OTP_MISSMATCH | possible highjack attempted, removes key's active flag
 8 | STORAGE_FULL | very unlikely, but yey, here's an error in case more than >3000 keys got stored
-9 | EVENT_UPDATED | key data got updated via **update** call
+9 | UPDATED | key data got updated via **update** call
 
 #### Subscribing to the live log
 The **spark-bouncer** is publishing all key usages to the Spark Cloud [event system](http://docs.spark.io/api/#subscribing-to-events) as [private events](http://docs.spark.io/firmware/#spark-publish).
@@ -119,6 +134,8 @@ To control the Spark Core's debug output, call the published **debug** function 
 
 * **1** -> to **enable** serial debug output, or
 * **0** -> to **disable** serial debug output
+
+The debug mode can be enabled by default in the top of the code.
 
 Example:
 
