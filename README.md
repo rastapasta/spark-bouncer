@@ -10,7 +10,7 @@ Security is provided by [One-time passwords](https://en.wikipedia.org/wiki/One-t
 
 Your team is allowed to get in early, the crowd a bit later? No worries, the **spark-bouncer** keeps an eye on precise timing!
 
-You plan to embed a flexible door access control into your existing infrastructure? The **spark-bouncer** is API driven for you!
+You plan to embed a flexible door access control into your existing infrastructure? The **spark-bouncer** is API driven!
 
 Hook yourself into the live log [event stream](http://docs.spark.io/api/#subscribing-to-events) or query its persistently stored [Circular Buffer](https://en.wikipedia.org/wiki/Circular_buffer).
 
