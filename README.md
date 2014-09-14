@@ -27,6 +27,11 @@ Buzzing yourself in is just an API call away.
 ## Get started
 Breadboard the parts together as described in the [header](https://github.com/rastapasta/spark-bouncer/blob/master/application.cpp) and boot it up!
 
+If it is the first time you are running the **spark-bouncer**, your flash memory needs to get initialized:
+```sh
+$ spark call [core-id] reset
+```
+
 Hold a comptabile RFID key to the reader, nothing will happen - yet!
 Query the log and store your key's serial number:
 
@@ -133,7 +138,8 @@ $ spark subsribe [core-id]
 Published events:
 
 * **card** - after key handling or updating, data based on *data format*
-* **button** - when manual buzzer button is pressed, no data* 
+* **button** - when manual buzzer button is pressed
+* **call** - when door is opened via the Spark Cloud
 
 #### Query the most recent events via the cloud
 The Spark Cloud allows to [query](http://docs.spark.io/api/#reading-data-from-a-core-variables) runtime variables with a [maximal length](http://docs.spark.io/firmware/#spark-variable) of 622.
