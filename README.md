@@ -74,6 +74,17 @@ All logging data is returned as a semicolon seperated list. The included element
 
 #### Event codes
 
+Code | Event | Triggered when?
+-----|-------|----------------
+0 | NOT_FOUND | scanned RFID key is not stored yet
+1 | OPEN | door access granted
+2 | OUT_OF_HOURS | valid key but not good for now
+3 | DISABLED | usage of a key which is not flagged *active*
+4 | LOST | key is flagged as lost
+5 | OTP_MISSMATCH | possible highjack attempted, removes key's active flag
+8 | STORAGE_FULL | very unlikely, but yey, here's an error in case more than >3000 keys got stored
+9 | EVENT_UPDATED | key data got updated via **update** call
+
 #### Subscribing to the live log
 The **spark-bouncer** is publishing all key usages to the Spark Cloud [event system](http://docs.spark.io/api/#subscribing-to-events) as [private events](http://docs.spark.io/firmware/#spark-publish).
 
