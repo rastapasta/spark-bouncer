@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="description" content="spark-bouncer : RFID + Spark Core based door access control system with full cloud immersion">
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>spark-bouncer</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/rastapasta/spark-bouncer">View on GitHub</a>
+
+          <h1 id="project_title">spark-bouncer</h1>
+          <h2 id="project_tagline">RFID + Spark Core based door access control system with full cloud immersion</h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/rastapasta/spark-bouncer/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/rastapasta/spark-bouncer/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h1>
+<a name="spark-bouncer" class="anchor" href="#spark-bouncer"><span class="octicon octicon-link"></span></a>spark-bouncer</h1>
+
+<p><img src="http://se.esse.es/spark-bouncer.jpg" alt="spark-bouncer logo"></p>
+
+<h2>
+<a name="overview" class="anchor" href="#overview"><span class="octicon octicon-link"></span></a>Overview</h2>
+
+<p><strong>spark-bouncer</strong> is a security focused door access control system built on top of the <a href="http://docs.spark.io/hardware/">Spark Core</a> platform.</p>
+
+<p>It utilizes the <a href="http://docs.spark.io/hardware/#subsystems-external-flash">user flash memory</a> to juggle up to 3000 RFID keys. Configuration happens via cloud based <a href="http://docs.spark.io/api/#basic-functions-controlling-a-core">function calls</a>.</p>
+
+<p>Security is provided by <a href="https://en.wikipedia.org/wiki/One-time_password">One-time passwords</a> for each key usage, making your door immune against serial number <a href="http://www.instructables.com/id/RFID-Emulator-How-to-Clone-RFID-Card-Tag-/">spoofing attacks</a>.</p>
+
+<p>Your team is allowed to get in early, the crowd a bit later? No worries, the <strong>spark-bouncer</strong> keeps an eye on precise timing!</p>
+
+<p>You plan to embed a flexible door access control into your existing infrastructure? The <strong>spark-bouncer</strong> is API driven!</p>
+
+<p>Hook yourself into the live log <a href="http://docs.spark.io/api/#subscribing-to-events">event stream</a> or query its persistently stored <a href="https://en.wikipedia.org/wiki/Circular_buffer">Circular Buffer</a>.</p>
+
+<p>Connect a <a href="http://www.exp-tech.de/Shields/Seeed-Studio-Grove-Relay.html">relay</a> to your <a href="https://en.wikipedia.org/wiki/Electric_strike">electric strike</a> and place a <a href="https://openclipart.org/image/300px/svg_to_png/190592/hot_button.png">button</a> on the inside to manually open the door, gentleman style.</p>
+
+<p>Buzzing yourself in is just an API call away.</p>
+
+<h2>
+<a name="hardware" class="anchor" href="#hardware"><span class="octicon octicon-link"></span></a>Hardware</h2>
+
+<ul>
+<li>
+<a href="https://www.spark.io/">Spark Core</a> [via <a href="https://www.spark.io/store">Spark Store</a>]</li>
+<li>
+<a href="http://community.spark.io/t/getting-the-rfid-rc522-to-work/3571">MF RC522 module</a> [via <a href="http://www.ebay.com/sch/i.html?_nkw=rc522">eBay</a>]</li>
+<li>Relay [via <a href="http://www.exp-tech.de/Shields/Seeed-Studio-Grove-Relay.html">EXP Tech</a>]</li>
+<li>Door with an <a href="https://en.wikipedia.org/wiki/Electric_strike">electric strike</a> [via <a href="http://www.ebay.com/sch/i.html?_nkw=electronic+door+strike&amp;_sop=15">eBay</a>]</li>
+</ul><h2>
+<a name="get-started" class="anchor" href="#get-started"><span class="octicon octicon-link"></span></a>Get started</h2>
+
+<p>Breadboard the parts together as described in the <a href="https://github.com/rastapasta/spark-bouncer/blob/master/application.cpp">header</a> and boot it up!</p>
+
+<p>The code is currently optimized to locally compile outside of the cloud. If you just like to test it without a local environment, flash the included firmware.bin to skip the setup.</p>
+
+<p>If it is the first time you are running the <strong>spark-bouncer</strong>, your flash memory needs to get initialized:</p>
+
+<div class="highlight highlight-sh"><pre><span class="nv">$ </span>spark call <span class="o">[</span>core-id<span class="o">]</span> reset
+</pre></div>
+
+<p>Hold a comptabile RFID key to the reader, nothing will happen - yet!
+Query the log and store your key's serial number:</p>
+
+<div class="highlight highlight-sh"><pre><span class="nv">$ </span>spark get <span class="o">[</span>core-id<span class="o">]</span> log
+123456<span class="p">;</span>aa:bb:cc:dd<span class="p">;</span>0
+<span class="nv">$ </span>spark call <span class="o">[</span>core-id<span class="o">]</span> update aa:bb:cc:dd<span class="p">;</span>*<span class="p">;</span>active,otp
+1
+</pre></div>
+
+<p>Try your RFID key again - the relay should make a happy noise.</p>
+
+<p>Let's see what has happened:</p>
+
+<div class="highlight highlight-sh"><pre><span class="nv">$ </span>spark get <span class="o">[</span>core-id<span class="o">]</span> log
+123490<span class="p">;</span>aa:bb:cc:dd<span class="p">;</span>1
+123480<span class="p">;</span>aa:bb:cc:dd<span class="p">;</span>9
+123456<span class="p">;</span>aa:bb:cc:dd<span class="p">;</span>0
+</pre></div>
+
+<p>After the key wasn't found in the first place (NOT_FOUND), we updated it (UPDATED) - and granted access at the end (OPEN)!</p>
+
+<h2>
+<a name="usage" class="anchor" href="#usage"><span class="octicon octicon-link"></span></a>Usage</h2>
+
+<h3>
+<a name="bouncer-let-me-in" class="anchor" href="#bouncer-let-me-in"><span class="octicon octicon-link"></span></a>Bouncer, let me in!</h3>
+
+<p>By calling the published <strong>open</strong> function, you'll get an instant buzz.</p>
+
+<p>Example:</p>
+
+<div class="highlight highlight-sh"><pre><span class="nv">$ </span>spark call <span class="o">[</span>core-id<span class="o">]</span> open
+</pre></div>
+
+<h3>
+<a name="configure-rfid-access" class="anchor" href="#configure-rfid-access"><span class="octicon octicon-link"></span></a>Configure RFID access</h3>
+
+<p>The <strong>spark-bouncer</strong> stores up to 3000 users, each being identified by their 4 to 10 bytes long <a href="https://en.wikipedia.org/wiki/Radio-frequency_identification#Tags">RFID serial numbers</a>.</p>
+
+<h4>
+<a name="store-rfid-key" class="anchor" href="#store-rfid-key"><span class="octicon octicon-link"></span></a>Store RFID key</h4>
+
+<p>You have to define whom to let in at which time. To do so, call the published <strong>update</strong> function with following argument:</p>
+
+<pre><code>[key serial];[time restrictions];[flags]
+</code></pre>
+
+<p>Format used in the fields:</p>
+
+<ul>
+<li>
+<strong>key serial</strong> -  aa:bb:cc[:...] - up to 10 hex values seperated by colons</li>
+<li>
+<strong>time restrictions</strong>
+
+<ul>
+<li>* -&gt; open at all times</li>
+<li>
+<strong>-</strong> -&gt; never open</li>
+<li>up to seven <strong>4 byte hex values</strong> to define specific valid hours per weekday</li>
+</ul>
+</li>
+<li>
+<strong>flags</strong> - comma seperated list, set to false if flag not present
+
+<ul>
+<li>
+<strong>otp</strong> -&gt; enable One Time Passwords for this key [<strong>recommended</strong>]</li>
+<li>
+<strong>active</strong> -&gt; mark key as active - mandatory for getting in</li>
+<li>
+<strong>lost</strong> -&gt; marks key as lost - won't get you in anymore</li>
+<li>
+<strong>reset</strong> -&gt; resets the stored OTP in case something went wrong</li>
+</ul>
+</li>
+</ul><p>The call returns</p>
+
+<ul>
+<li>
+<strong>1</strong> if all went well</li>
+<li>
+<strong>-1</strong> if the key couldn't get stored</li>
+</ul><p>Example:</p>
+
+<div class="highlight highlight-sh"><pre><span class="nv">$ </span>spark call <span class="o">[</span>core-id<span class="o">]</span> update <span class="s2">"aa:bb:cc:dd;*;active,otp"</span>
+</pre></div>
+
+<h4>
+<a name="time-based-access" class="anchor" href="#time-based-access"><span class="octicon octicon-link"></span></a>Time based access</h4>
+
+<p>Each hour of a week day is mapped to a bit in a 4 byte long. Setting a bit to 1 grants access for the corresponding hour.</p>
+
+<p>Examples:</p>
+
+<ul>
+<li>For the time between 16h and 17h, the 16th bit must be set (0x10000).</li>
+<li>For full day access, set all bits to high (0xFFFFFFFF).</li>
+<li>Grant access for all of Monday and Sunday, otherwise only buzz in between 16h-17h and 0h-4h on Tuesdays:</li>
+</ul><div class="highlight highlight-sh"><pre><span class="nv">$ </span>spark call <span class="o">[</span>core-id<span class="o">]</span> update <span class="s2">"aa:bb:cc:dd;FFFFFFFF 1000F 0 0 0 0 FFFFFFFF;active,otp"</span>
+</pre></div>
+
+<h3>
+<a name="logging" class="anchor" href="#logging"><span class="octicon octicon-link"></span></a>Logging</h3>
+
+<h4>
+<a name="data-format" class="anchor" href="#data-format"><span class="octicon octicon-link"></span></a>Data format</h4>
+
+<p>All logging data is returned as a semicolon seperated list. The included elements are:</p>
+
+<pre><code>[timestamp];[key serial];[event code]
+</code></pre>
+
+<h4>
+<a name="event-codes" class="anchor" href="#event-codes"><span class="octicon octicon-link"></span></a>Event codes</h4>
+
+<table>
+<thead><tr>
+<th>Code</th>
+<th>Event</th>
+<th>Triggered when?</th>
+</tr></thead>
+<tbody>
+<tr>
+<td>0</td>
+<td>NOT_FOUND</td>
+<td>scanned RFID key is not stored yet</td>
+</tr>
+<tr>
+<td>1</td>
+<td>OPEN</td>
+<td>door access granted</td>
+</tr>
+<tr>
+<td>2</td>
+<td>OUT_OF_HOURS</td>
+<td>valid key but not good for now</td>
+</tr>
+<tr>
+<td>3</td>
+<td>DISABLED</td>
+<td>usage of a key which is not flagged <em>active</em>
+</td>
+</tr>
+<tr>
+<td>4</td>
+<td>LOST</td>
+<td>key is flagged as lost</td>
+</tr>
+<tr>
+<td>5</td>
+<td>OTP_MISSMATCH</td>
+<td>possible highjack attempted, removes key's active flag</td>
+</tr>
+<tr>
+<td>8</td>
+<td>STORAGE_FULL</td>
+<td>very unlikely, but yey, here's an error in case more than &gt;3000 keys got stored</td>
+</tr>
+<tr>
+<td>9</td>
+<td>UPDATED</td>
+<td>key data got updated via <strong>update</strong> call</td>
+</tr>
+</tbody>
+</table><h4>
+<a name="subscribing-to-the-live-log" class="anchor" href="#subscribing-to-the-live-log"><span class="octicon octicon-link"></span></a>Subscribing to the live log</h4>
+
+<p>The <strong>spark-bouncer</strong> is publishing all key usages to the Spark Cloud <a href="http://docs.spark.io/api/#subscribing-to-events">event system</a> as <a href="http://docs.spark.io/firmware/#spark-publish">private events</a>.</p>
+
+<p>Example subscription:</p>
+
+<div class="highlight highlight-sh"><pre><span class="nv">$ </span>spark subsribe <span class="o">[</span>core-id<span class="o">]</span>
+</pre></div>
+
+<p>Published events:</p>
+
+<ul>
+<li>
+<strong>card</strong> - after key handling or updating, data based on <em>data format</em>
+</li>
+<li>
+<strong>button</strong> - when manual buzzer button is pressed</li>
+<li>
+<strong>call</strong> - when door is opened via the Spark Cloud</li>
+</ul><h4>
+<a name="query-the-most-recent-events-via-the-cloud" class="anchor" href="#query-the-most-recent-events-via-the-cloud"><span class="octicon octicon-link"></span></a>Query the most recent events via the cloud</h4>
+
+<p>The Spark Cloud allows to <a href="http://docs.spark.io/api/#reading-data-from-a-core-variables">query</a> runtime variables with a <a href="http://docs.spark.io/firmware/#spark-variable">maximal length</a> of 622.</p>
+
+<p>The <strong>spark-bouncer</strong> always keeps an internal buffer up to date with the most recent log entries.</p>
+
+<p>Published variables:</p>
+
+<ul>
+<li>
+<strong>log</strong> - containing as many descendingly ordered <em>data format</em> entries as it can hold.</li>
+</ul><p>Example query:</p>
+
+<div class="highlight highlight-sh"><pre><span class="nv">$ </span>spark get <span class="o">[</span>core-id<span class="o">]</span> log
+</pre></div>
+
+<h3>
+<a name="debugging" class="anchor" href="#debugging"><span class="octicon octicon-link"></span></a>Debugging</h3>
+
+<p>To control the Spark Core's debug output, call the published <strong>debug</strong> function with either</p>
+
+<ul>
+<li>
+<strong>1</strong> -&gt; to <strong>enable</strong> serial debug output, or</li>
+<li>
+<strong>0</strong> -&gt; to <strong>disable</strong> serial debug output</li>
+</ul><p>The debug mode can be enabled by default in the top of the code.</p>
+
+<p>Example:</p>
+
+<div class="highlight highlight-sh"><pre><span class="nv">$ </span>spark call <span class="o">[</span>core-id<span class="o">]</span> debug 1
+1
+<span class="nv">$ </span>spark serial monitor
+Opening serial monitor <span class="k">for</span> com port: <span class="s2">"/dev/cu.usbmodemfa131"</span>
+<span class="o">[</span>rfid<span class="o">]</span> identifying f3:65:1d:bc
+<span class="o">[</span>flash<span class="o">]</span> Key found, index <span class="c">#0</span>
+-- Active? yes
+-- Lost? no
+-- Times:
+          Monday   Tuesday  Wednesday  Thursday   Friday   Saturday   Sunday
+ <span class="m">0</span> h                                      *                               
+ <span class="m">1</span> h                                      *                               
+ <span class="m">2</span> h                                      *                               
+ <span class="m">3</span> h                                      *                               
+ <span class="m">4</span> h                                      *                               
+ <span class="m">5</span> h                                                                      
+ <span class="m">6</span> h                                                                      
+ <span class="m">7</span> h                                                                      
+ <span class="m">8</span> h                                                                      
+ <span class="m">9</span> h        *         *                                                   
+<span class="m">10</span> h        *         *                                                   
+<span class="m">11</span> h        *         *                                       *         * 
+<span class="m">12</span> h        *         *                                       *         * 
+<span class="m">13</span> h        *         *                                       *         * 
+<span class="m">14</span> h        *         *                                       *         * 
+<span class="m">15</span> h        *         *                                       *         * 
+<span class="m">16</span> h        *         *                                       *         * 
+<span class="m">17</span> h        *         *                                      <span class="o">(</span>*<span class="o">)</span>        * 
+<span class="m">18</span> h        *         *                                       *         * 
+<span class="m">19</span> h        *         *                                       *         * 
+<span class="m">20</span> h        *         *         *                                         
+<span class="m">21</span> h                            *                                         
+<span class="m">22</span> h                            *                                         
+<span class="m">23</span> h                            *                                         
+
+-- last update of user configuration: Sat Sep <span class="m">13</span> 21:32:47 2014
+-- last seen: Sat Sep <span class="m">13</span> 21:44:06 2014
+
+-- OTP:      <span class="m">64</span> <span class="m">39</span> 2C BC 4A F6 <span class="m">62</span> <span class="m">04</span> B1 FF <span class="m">49</span> D0 <span class="m">58</span> 2B F4 E3
+OTP on Chip: <span class="m">64</span> <span class="m">39</span> 2C BC 4A F6 <span class="m">62</span> <span class="m">04</span> B1 FF <span class="m">49</span> D0 <span class="m">58</span> 2B F4 E3
+New OTP:     DA <span class="m">29</span> <span class="m">14</span> 1D <span class="m">37</span> <span class="m">12</span> 7D <span class="m">56</span> <span class="m">04</span> <span class="m">84</span> <span class="m">24</span> A6 <span class="m">49</span> E0 CA 67
+<span class="o">[</span>card<span class="o">]</span> hours match, opening!
+<span class="o">[</span>door<span class="o">]</span> opening
+<span class="o">[</span>door<span class="o">]</span> closing
+</pre></div>
+
+<h4>
+<a name="reset-storage" class="anchor" href="#reset-storage"><span class="octicon octicon-link"></span></a>Reset storage</h4>
+
+<p>Be careful, but if you need to reset your storage during development, call the published <strong>reset</strong> function. Your <strong>spark-bouncer</strong> will forget all he knew.</p>
+
+<p><strong>Recommended</strong> to disable in production environments.</p>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">spark-bouncer maintained by <a href="https://github.com/rastapasta">rastapasta</a></p>
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>
