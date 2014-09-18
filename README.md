@@ -134,7 +134,7 @@ The **spark-bouncer** is publishing all key usages to the Spark Cloud [event sys
 Example subscription:
 
 ```sh
-$ spark subsribe "" [core-id]
+$ spark subscribe "" [core-id]
 ```
 
 Published events:
